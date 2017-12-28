@@ -28,8 +28,20 @@ class ofApp : public ofBaseApp{
     
     // stick you maximilian declarations below
     
+    // buffer size
+    int bufferSize;
+    
+    // sample rate
+    int sampleRate;
+    
+    // for use with myCounter. These are also used to check if we have a new beat this sample
+    int currentCount, lastCount, voice = 0;
+    
+    // maxiClock object for time keeping
+    maxiClock myClock;
+    
     // set up oscillators
-    maxiOsc mySine1;
+    maxiOsc VCO1;
     
     // control sound output from oscillators
     double VCO1out;
@@ -37,17 +49,20 @@ class ofApp : public ofBaseApp{
     // envs
     maxiEnv ADSR;
     
+    // env output
+    double ADSRout;
+    
     // filter
     maxiFilter VCF;
     
     // control out put from filter
     double VCFout;
     
-    // buffer size
-    int	bufferSize;
+    // volume control
+    double ampOut;
     
-    // sample rate
-    int	sampleRate;
+    // mix it all together
+    double mix;
     
     double wave;
 		

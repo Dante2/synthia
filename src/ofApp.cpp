@@ -27,10 +27,12 @@ void ofApp::setup(){
      */
     
     // apply ADSR values accordingly
-    ADSR.attack(200);
-    ADSR.decay(200);
-    ADSR.setSustain(50);
-    ADSR.setRelease(3000);
+    ADSR.attack = 200;
+    ADSR.decay = 200;
+    ADSR.sustain = 50;
+    ADSR.release = 3000;
+    
+    ampOut = 0.5;
     
     mySample.load(ofToDataPath("sound.wav"));
     
@@ -72,10 +74,16 @@ void ofApp::audioOut(float * output, int bufferSize, int nChannels) {
         
         // wave =
         
-        VCO1out = mySine1.sinewave(2000);
+        ADSR.trigger = 1;
+        
+        ADSRout = ADSR.adsr(1., ADSR.trigger);
+        
+        VCO1out = VCO1.sinewave(2000);
+        
+        mix += VCO1out * ADSRout;
 
-        output[i * nChannels] = VCO1out;
-        output[i * nChannels + 1] = VCO1out;
+        output[i * nChannels] = mix * ampOut;
+        output[i * nChannels + 1] = mix * ampOut;
         
     }
     
