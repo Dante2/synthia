@@ -28,11 +28,27 @@ class ofApp : public ofBaseApp{
     
     // stick you maximilian declarations below
     
+    // set up oscillators
     maxiOsc mySine1;
+    
+    // control sound output from oscillators
     double VCO1out;
     
-    int		bufferSize; /* buffer size */
-    int		sampleRate;
+    // envs
+    maxiEnv ADSR;
+    
+    // filter
+    maxiFilter VCF;
+    
+    // control out put from filter
+    double VCFout;
+    
+    // buffer size
+    int	bufferSize;
+    
+    // sample rate
+    int	sampleRate;
+    
     double wave;
 		
     maxiSample mySample;

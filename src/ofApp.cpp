@@ -14,21 +14,23 @@ void ofApp::setup(){
     
     ofSetFrameRate(60);
     
-    // Sampling Rate
+    // set sampling Rate
     sampleRate = 44100;
     
-    // Buffer Size. you have to fill this buffer with sound using the for loop in the audioOut method
+    // set buffer Size. you have to fill this buffer with sound using the for loop in the audioOut method
     bufferSize = 512;
 
+    // calling the calling the setup method in maximilian settings containing samplerate and buffer size
     ofxMaxiSettings::setup(sampleRate, 2, bufferSize);
-    
-    // dont know about this stuff
-    ofSetVerticalSync(true);
-    ofEnableAlphaBlending();
-    ofEnableSmoothing();
     
     /* Anything that you would normally find/put in maximilian's setup() method needs to go here. For example, Sample loading.
      */
+    
+    // apply ADSR values accordingly
+    ADSR.attack(200);
+    ADSR.decay(200);
+    ADSR.setSustain(50);
+    ADSR.setRelease(3000);
     
     mySample.load(ofToDataPath("sound.wav"));
     
@@ -64,24 +66,16 @@ void ofApp::audioOut(float * output, int bufferSize, int nChannels) {
     
     for (int i = 0; i < bufferSize; i++){
         
-        /* Stick your maximilian 'play()' code in here ! Declare your objects in testApp.h.
-         
-         For information on how maximilian works, take a look at the example code at
-         
-         http://www.maximilian.strangeloop.co.uk
-         
-         under 'Tutorials'.
-         
-         */
+        // Stick your maximilian 'play()' code in here ! Declare your objects in testApp.h.
         
-        //make 'wave' equal something noisy
+        // variable wave currently not being used
         
+        // wave =
         
         VCO1out = mySine1.sinewave(2000);
 
-        
-        output[i*nChannels    ] = VCO1out; /* You may end up with lots of outputs. add them here */
-        output[i*nChannels + 1] = VCO1out;
+        output[i * nChannels] = VCO1out;
+        output[i * nChannels + 1] = VCO1out;
         
     }
     
