@@ -41,13 +41,13 @@ class ofApp : public ofBaseApp{
     // instead we'll create a counter with phasor
     
     // set up oscillators
-    maxiOsc VCO1, myCounter;
+    maxiOsc VCO1, VCO2, myCounter, LFO1;
     
     // for use with myCounter
     int currentCount;
     
     // control sound output from oscillators
-    double VCO1out;
+    double VCO1out, LFO1out;
     
     // envs
     maxiEnv ADSR;
@@ -56,10 +56,10 @@ class ofApp : public ofBaseApp{
     double ADSRout;
     
     // filter
-    maxiFilter VCF1;
+    maxiFilter VCF1, VCF2;
     
     // control out put from filter
-    double VCF1out;
+    double VCF1out, VCF2out;
     
     // volume control
     double ampOut;

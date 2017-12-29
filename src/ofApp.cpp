@@ -32,18 +32,12 @@ void ofApp::setup(){
     ADSR.sustain = 50;
     ADSR.release = 3000;
     
-    
-    
     mySample.load(ofToDataPath("sound.wav"));
     
     ofBackground(0,0,0);
-    
-    
+
     ofSoundStreamSetup(2,2,this, sampleRate, bufferSize, 4); /* this has to happen at the end of setup - it switches on the DAC */
-    
-    
-    
-    
+
 }
 
 //--------------------------------------------------------------
@@ -68,24 +62,36 @@ void ofApp::audioOut(float * output, int bufferSize, int nChannels) {
     
     for (int i = 0; i < bufferSize; i++){
         
+        // LFO
+        LFO1out = LFO1.sinewave(5) * 10;
+        
+        // LFO controlled oscillator --> vibrato
+        double VCO2LFO1 = VCO2.sawn(200 + LFO1out);
+        
         // clock device using phasor and square wave
         
         int myArray[10] = {100, 200, 300, 400, 500, 600, 500, 400, 300, 200};
         currentCount = myCounter.phasor(1, 1, 9);
         
-        // oscillator1 with low pass filter - portamento
+        // oscillator1
         // worth playing around with high pass / band pass / band reject
         VCO1out = VCO1.square(2000) * currentCount;
         
-        // filter
+        // filters
+        // low pass - portamento
         VCF1out = VCO1.square(VCF1.lopass(myArray[currentCount], 0.005));
         
+        // low res
+        VCF2out = VCF2.lores(VCO1out, 500, 20);
+        
         // amplitude control on raw oscillator and filter
-        double VCO1amp = VCO1out * 0.005;
+        double VCO1amp = VCO1out * 0.0;
         double VCF1amp = VCF1out * 0.0;
+        double VCF2amp = VCF2out * 0.0;
+        double VCO2LFO1amp = VCO2LFO1 * 0.05;
         
         // mixer
-        mix = VCO1amp + VCF1amp;
+        mix = VCO1amp + VCF1amp + VCF2amp + VCO2LFO1amp;
         
         output[i * nChannels] = mix;
         output[i * nChannels + 1] = mix;
