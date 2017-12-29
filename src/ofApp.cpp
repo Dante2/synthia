@@ -32,7 +32,7 @@ void ofApp::setup(){
     ADSR.sustain = 50;
     ADSR.release = 3000;
     
-    ampOut = 0.05;
+    ampOut = 0.005;
     
     mySample.load(ofToDataPath("sound.wav"));
     
@@ -68,12 +68,16 @@ void ofApp::audioOut(float * output, int bufferSize, int nChannels) {
     
     for (int i = 0; i < bufferSize; i++){
         
-        currentCount = myCounter.phasor(120, 1, 9);
+        currentCount = myCounter.phasor(40, 1, 3);
+       
         
-        if (currentCount < 5){
+        if (currentCount < 2){
         
-            // VCO1.sinewave(2000);
-             ADSR.trigger = 1;
+             VCO1out = VCO1.sinewave(2000);
+            
+            
+            
+            // ADSR.trigger = 1;
             
         }
         
@@ -85,13 +89,13 @@ void ofApp::audioOut(float * output, int bufferSize, int nChannels) {
         
         
         
-         ADSRout = ADSR.adsr(1., ADSR.trigger);
+         // ADSRout = ADSR.adsr(1., ADSR.trigger);
         
-         VCO1out = VCO1.sinewave(2000);
         
-         mix += VCO1out * ADSRout;
         
-       // mix += VCO1out;
+        // mix += VCO1out * ADSRout;
+        
+        mix += VCO1out;
 
         output[i * nChannels] = mix * ampOut;
         output[i * nChannels + 1] = mix * ampOut;
