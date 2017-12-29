@@ -71,15 +71,15 @@ void ofApp::audioOut(float * output, int bufferSize, int nChannels) {
         currentCount = myCounter.phasor(40, 1, 3);
        
         
-        if (currentCount < 2){
+        //if (currentCount < 2){
         
-             VCO1out = VCO1.sinewave(2000);
+        
             
             
             
             // ADSR.trigger = 1;
             
-        }
+        //}
         
         // Stick your maximilian 'play()' code in here ! Declare your objects in testApp.h.
         
@@ -94,6 +94,8 @@ void ofApp::audioOut(float * output, int bufferSize, int nChannels) {
         
         
         // mix += VCO1out * ADSRout;
+        
+        VCO1out = VCO1.sinewave(2000);
         
         mix += VCO1out;
 

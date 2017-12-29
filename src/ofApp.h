@@ -34,6 +34,8 @@ class ofApp : public ofBaseApp{
     // sample rate
     int sampleRate;
     
+
+    
     // maxiClock object doesn't seem to exist in the OF version of Maxim :[
     // maxiClock myClock;
     // instead we'll create a counter with phasor
