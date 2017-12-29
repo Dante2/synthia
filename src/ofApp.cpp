@@ -32,7 +32,7 @@ void ofApp::setup(){
     ADSR.sustain = 50;
     ADSR.release = 3000;
     
-    ampOut = 0.005;
+    
     
     mySample.load(ofToDataPath("sound.wav"));
     
@@ -73,15 +73,22 @@ void ofApp::audioOut(float * output, int bufferSize, int nChannels) {
         int myArray[10] = {100, 200, 300, 400, 500, 600, 500, 400, 300, 200};
         currentCount = myCounter.phasor(1, 1, 9);
         
-        // oscillator1 
-        VCO1out = VCO1.square(myArray[currentCount]);
+        // oscillator1 with low pass filter - portamento
+        // worth playing around with high pass / band pass / band reject
+        VCO1out = VCO1.square(2000) * currentCount;
         
         // filter
-        VCFout = VCF.lopass(VCO1out, 0.005);
-    
+        VCF1out = VCO1.square(VCF1.lopass(myArray[currentCount], 0.005));
         
-        output[i * nChannels] = VCFout * ampOut;
-        output[i * nChannels + 1] = VCFout * ampOut;
+        // amplitude control on raw oscillator and filter
+        double VCO1amp = VCO1out * 0.005;
+        double VCF1amp = VCF1out * 0.0;
+        
+        // mixer
+        mix = VCO1amp + VCF1amp;
+        
+        output[i * nChannels] = mix;
+        output[i * nChannels + 1] = mix;
         
     }
     

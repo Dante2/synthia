@@ -56,10 +56,10 @@ class ofApp : public ofBaseApp{
     double ADSRout;
     
     // filter
-    maxiFilter VCF;
+    maxiFilter VCF1;
     
     // control out put from filter
-    double VCFout;
+    double VCF1out;
     
     // volume control
     double ampOut;
