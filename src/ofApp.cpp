@@ -68,16 +68,20 @@ void ofApp::audioOut(float * output, int bufferSize, int nChannels) {
     
     for (int i = 0; i < bufferSize; i++){
         
+        // clock device using phasor and square wave
         
         int myArray[10] = {100, 200, 300, 400, 500, 600, 500, 400, 300, 200};
         currentCount = myCounter.phasor(1, 1, 9);
+        
+        // oscillator1 
         VCO1out = VCO1.square(myArray[currentCount]);
-        //if (currentCount < 2){
         
+        // filter
+        VCFout = VCF.lopass(VCO1out, 0.005);
+    
         
-
-        output[i * nChannels] = VCO1out * ampOut;
-        output[i * nChannels + 1] = VCO1out * ampOut;
+        output[i * nChannels] = VCFout * ampOut;
+        output[i * nChannels + 1] = VCFout * ampOut;
         
     }
     
