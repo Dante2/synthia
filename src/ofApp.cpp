@@ -68,39 +68,16 @@ void ofApp::audioOut(float * output, int bufferSize, int nChannels) {
     
     for (int i = 0; i < bufferSize; i++){
         
-        currentCount = myCounter.phasor(40, 1, 3);
-       
         
+        int myArray[10] = {100, 200, 300, 400, 500, 600, 500, 400, 300, 200};
+        currentCount = myCounter.phasor(1, 1, 9);
+        VCO1out = VCO1.square(myArray[currentCount]);
         //if (currentCount < 2){
         
         
-            
-            
-            
-            // ADSR.trigger = 1;
-            
-        //}
-        
-        // Stick your maximilian 'play()' code in here ! Declare your objects in testApp.h.
-        
-        // variable 'wave' currently not being used
-        
-        // wave =
-        
-        
-        
-         // ADSRout = ADSR.adsr(1., ADSR.trigger);
-        
-        
-        
-        // mix += VCO1out * ADSRout;
-        
-        VCO1out = VCO1.sinewave(2000);
-        
-        mix += VCO1out;
 
-        output[i * nChannels] = mix * ampOut;
-        output[i * nChannels + 1] = mix * ampOut;
+        output[i * nChannels] = VCO1out * ampOut;
+        output[i * nChannels + 1] = VCO1out * ampOut;
         
     }
     
