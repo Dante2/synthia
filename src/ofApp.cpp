@@ -32,7 +32,7 @@ void ofApp::setup(){
     ADSR.sustain = 50;
     ADSR.release = 3000;
     
-    ampOut = 0.5;
+    ampOut = 0.05;
     
     mySample.load(ofToDataPath("sound.wav"));
     
@@ -70,19 +70,28 @@ void ofApp::audioOut(float * output, int bufferSize, int nChannels) {
         
         currentCount = myCounter.phasor(120, 1, 9);
         
+        if (currentCount < 5){
+        
+            // VCO1.sinewave(2000);
+             ADSR.trigger = 1;
+            
+        }
+        
         // Stick your maximilian 'play()' code in here ! Declare your objects in testApp.h.
         
-        // variable wave currently not being used
+        // variable 'wave' currently not being used
         
         // wave =
         
-        ADSR.trigger = 1;
         
-        ADSRout = ADSR.adsr(1., ADSR.trigger);
         
-        VCO1out = VCO1.sinewave(2000);
+         ADSRout = ADSR.adsr(1., ADSR.trigger);
         
-        mix += VCO1out * ADSRout;
+         VCO1out = VCO1.sinewave(2000);
+        
+         mix += VCO1out * ADSRout;
+        
+       // mix += VCO1out;
 
         output[i * nChannels] = mix * ampOut;
         output[i * nChannels + 1] = mix * ampOut;
