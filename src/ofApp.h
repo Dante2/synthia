@@ -34,14 +34,15 @@ class ofApp : public ofBaseApp{
     // sample rate
     int sampleRate;
     
-    // for use with myCounter. These are also used to check if we have a new beat this sample
-    int currentCount, lastCount, voice = 0;
-    
-    // maxiClock object for time keeping
-    maxiClock myClock;
+    // maxiClock object doesn't seem to exist in the OF version of Maxim :[
+    // maxiClock myClock;
+    // instead we'll create a counter with phasor
     
     // set up oscillators
-    maxiOsc VCO1;
+    maxiOsc VCO1, myCounter;
+    
+    // for use with myCounter
+    int currentCount;
     
     // control sound output from oscillators
     double VCO1out;

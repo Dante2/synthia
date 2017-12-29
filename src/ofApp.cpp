@@ -68,6 +68,8 @@ void ofApp::audioOut(float * output, int bufferSize, int nChannels) {
     
     for (int i = 0; i < bufferSize; i++){
         
+        currentCount = myCounter.phasor(120, 1, 9);
+        
         // Stick your maximilian 'play()' code in here ! Declare your objects in testApp.h.
         
         // variable wave currently not being used
