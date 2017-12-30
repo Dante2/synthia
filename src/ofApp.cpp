@@ -27,14 +27,15 @@ void ofApp::setup(){
     // calling the calling the setup method in maximilian settings containing samplerate and buffer size
     ofxMaxiSettings::setup(sampleRate, 2, bufferSize);
     
-    /* Anything that you would normally find/put in maximilian's setup() method needs to go here. For example, Sample loading.
-     */
+ for (int i = 0; i < 6; i++) {
     
     // apply ADSR values accordingly
-    ADSR.setAttack(20);
-    ADSR.setDecay(100);
-    ADSR.setSustain(0.25);
-    ADSR.setRelease(1000);
+    ADSR[i].setAttack(20);
+    ADSR[i].setDecay(100);
+    ADSR[i].setSustain(0.25);
+    ADSR[i].setRelease(1000);
+     
+ }
     
     mySample.load(ofToDataPath("sound.wav"));
     
@@ -68,6 +69,9 @@ void ofApp::audioOut(float * output, int bufferSize, int nChannels) {
     
     for (int i = 0; i < bufferSize; i++){
         
+        // set mix to 0 to begin with
+        mix = 0;
+        
         // maxiClock functionality
         myClock.ticker();
         if (myClock.tick) {
@@ -75,20 +79,21 @@ void ofApp::audioOut(float * output, int bufferSize, int nChannels) {
             // std::cout << myClock.tick;
             
             // retrigger the voices once we reach the 6th and final voice
-            // if (voice == 6) {
-               // voice = 0;
-           // }
+            if (voice == 6) {
+                voice = 0;
+        }
             
-            // trigger the envelope from the start
-//            ADSR[voice].trigger = 1;
-                ADSR.trigger = 1;
-            //std::cout << "adsr = " << ADSR.trigger;
-//            pitch[voice] = voice+1;
-//            voice ++;
+        // trigger the envelope from the start
+        ADSR[voice].trigger = 1;
+        // ADSR.trigger = 1;
+        pitch[voice] = voice+1;
+        voice ++;
             
         }
     
-     ADSRout = ADSR.adsr(1., ADSR.trigger);
+        /* our ADSR ENVs are iterated through and passed through to the ADSR output
+         where the adsr functionality passes it a constant signal of 1 to generate the transient and triggered */
+        ADSRout[i] = ADSR[i].adsr(1., ADSR[i].trigger);
         //std::cout << " adsr out = " << ADSRout;
     
         // LFO
@@ -114,7 +119,7 @@ void ofApp::audioOut(float * output, int bufferSize, int nChannels) {
         VCO2out = VCO2.sawn(200 + LFO1out);
         
         // using env to control pitch of oscillator --> good for drums with currentCount phasor as clock
-        VCO3out = VCO3.sawn(currentCount * 100 * ADSRout * 10);
+        VCO3out[i] = VCO3[i].sawn(currentCount * 100 * ADSRout[i] * 10);
         
         // filters
         // low pass - portamento
@@ -124,22 +129,24 @@ void ofApp::audioOut(float * output, int bufferSize, int nChannels) {
         VCF2out = VCF2.lores(VCO2out, 2000 + LFO2out, 20);
         
         // apply envs
-        double VCF2env = VCF2out * ADSRout;
-        double VCO3env = VCO3out * ADSRout;
+        // double VCF2env = VCF2out * ADSRout;
+        VCO3env[i] = VCO3out[i] * ADSRout[i] / 6;
         
         
         // amplitude control on raw oscillator and filter
         double VCO1amp = VCO1out * 0.0;
         double VCF1amp = VCF1out * 0.0;
-        double VCF2amp = VCF2env * 0.0;
+        // double VCF2amp = VCF2env * 0.0;
         double VCO2amp = VCO2out * 0.0;
-        double VCO3amp = VCO3env * 0.05;
+        VCO3amp[i] = VCO3env[i] * 0.025;
         
         // mixer
-        mix = VCO1amp + VCF1amp + VCF2amp + VCO2amp + VCO3amp;
+        // mix = VCO1amp + VCF1amp + VCF2amp + VCO2amp + VCO3amp;
+        
+        mix += VCO3amp[i];
         
         // if you dont set env to 'off' its constantly 'on'
-        ADSR.trigger = 0;
+        ADSR[i].trigger = 0;
         output[i * nChannels] = mix;
         output[i * nChannels + 1] = mix;
         

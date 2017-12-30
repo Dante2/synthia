@@ -39,26 +39,35 @@ class ofApp : public ofBaseApp{
     // maxiClock object wasn't working but I solved it
     maxiClock myClock;
     
-    // set up oscillators
-    maxiOsc VCO1, VCO2, VCO3, myCounter, LFO1, LFO2;
+    // set up oscillators. Hardcoding number at VCO3 --> bad?
+    maxiOsc VCO1, VCO2, VCO3[6], myCounter, LFO1, LFO2;
     
     // for use with myCounter
-    int currentCount;
+    int currentCount, voice;
     
-    // control sound output from oscillators
-    double VCO1out, VCO2out, VCO3out, LFO1out, LFO2out;
+    // for use with ADSR trigger if statement in clock
+    double pitch[6];
+    
+    // control sound output from oscillators. Hardcoding number at VCO3out --> bad?
+    double VCO1out, VCO2out, VCO3out[6], LFO1out, LFO2out;
     
     // envs
-    maxiEnv ADSR;
+    maxiEnv ADSR[6];
     
     // env output
-    double ADSRout;
+    double ADSRout[6];
     
     // filter
     maxiFilter VCF1, VCF2;
     
     // control out put from filter
     double VCF1out, VCF2out;
+    
+    // oscillator 3 mixed with env
+    double VCO3env[6];
+    
+    // amplitude control oscillator 3
+    double VCO3amp[6];
     
     // volume control
     double ampOut;
