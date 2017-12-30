@@ -15,7 +15,7 @@ void ofApp::setup(){
     ofSetFrameRate(60);
     
     // maxiClock
-    myClock.setTicksPerBeat(8);
+    myClock.setTicksPerBeat(2);
     myClock.setTempo(60);
     
     // set sampling Rate
@@ -31,10 +31,10 @@ void ofApp::setup(){
      */
     
     // apply ADSR values accordingly
-    ADSR.attack = 200;
-    ADSR.decay = 200;
-    ADSR.sustain = 50;
-    ADSR.release = 3000;
+    ADSR.setAttack(20);
+    ADSR.setDecay(100);
+    ADSR.setSustain(0.25);
+    ADSR.setRelease(1000);
     
     mySample.load(ofToDataPath("sound.wav"));
     
@@ -70,19 +70,25 @@ void ofApp::audioOut(float * output, int bufferSize, int nChannels) {
         myClock.ticker();
         if (myClock.tick) {
             // freq += 2;
+            // std::cout << myClock.tick;
             
             // retrigger the voices once we reach the 6th and final voice
             // if (voice == 6) {
                // voice = 0;
-            }
+           // }
             
             // trigger the envelope from the start
 //            ADSR[voice].trigger = 1;
+                ADSR.trigger = 1;
+            //std::cout << "adsr = " << ADSR.trigger;
 //            pitch[voice] = voice+1;
 //            voice ++;
             
         }
-        
+    
+     ADSRout = ADSR.adsr(1., ADSR.trigger);
+        //std::cout << " adsr out = " << ADSRout;
+    
         // LFO
         LFO1out = LFO1.sinewave(5) * 2;
         LFO2out = LFO2.sinewave(0.1) * 1500;
@@ -91,6 +97,11 @@ void ofApp::audioOut(float * output, int bufferSize, int nChannels) {
         
         int myArray[10] = {100, 200, 300, 400, 500, 600, 500, 400, 300, 200};
         currentCount = myCounter.phasor(1, 1, 9);
+
+        // this if else statement couples with the phasor in currentCount to trigger the ADSR
+//        if (currentCount == 1) ADSR.trigger = 1;
+//
+//        else ADSR.trigger = 0;
         
         //--- oscillators ---//
         
@@ -100,6 +111,9 @@ void ofApp::audioOut(float * output, int bufferSize, int nChannels) {
         // LFO controlled oscillator --> vibrato
         VCO2out = VCO2.sawn(200 + LFO1out);
         
+        // using env to control pitch of oscillator --> good for drums with currentCount phasor as clock
+        VCO3out = VCO3.sawn(currentCount * 100 * ADSRout * 10);
+        
         // filters
         // low pass - portamento
         VCF1out = VCO1.square(VCF1.lopass(myArray[currentCount], 0.005));
@@ -107,20 +121,28 @@ void ofApp::audioOut(float * output, int bufferSize, int nChannels) {
         // low res - vibrato
         VCF2out = VCF2.lores(VCO2out, 2000 + LFO2out, 20);
         
+        // apply envs
+        double VCF2env = VCF2out * ADSRout;
+        double VCO3env = VCO3out * ADSRout;
+        
+        
         // amplitude control on raw oscillator and filter
         double VCO1amp = VCO1out * 0.0;
         double VCF1amp = VCF1out * 0.0;
-        double VCF2amp = VCF2out * 0.05;
+        double VCF2amp = VCF2env * 0.0;
         double VCO2amp = VCO2out * 0.0;
+        double VCO3amp = VCO3env * 0.05;
         
         // mixer
-        mix = VCO1amp + VCF1amp + VCF2amp + VCO2amp;
+        mix = VCO1amp + VCF1amp + VCF2amp + VCO2amp + VCO3amp;
         
+        // if you dont set env to 'off' its constantly 'on'
+        ADSR.trigger = 0;
         output[i * nChannels] = mix;
         output[i * nChannels + 1] = mix;
         
     }
-    
+    // std::cout << " adsr out = " << ADSRout;
     
 }
 

@@ -40,13 +40,13 @@ class ofApp : public ofBaseApp{
     maxiClock myClock;
     
     // set up oscillators
-    maxiOsc VCO1, VCO2, myCounter, LFO1, LFO2;
+    maxiOsc VCO1, VCO2, VCO3, myCounter, LFO1, LFO2;
     
     // for use with myCounter
     int currentCount;
     
     // control sound output from oscillators
-    double VCO1out, VCO2out, LFO1out, LFO2out;
+    double VCO1out, VCO2out, VCO3out, LFO1out, LFO2out;
     
     // envs
     maxiEnv ADSR;
