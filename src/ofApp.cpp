@@ -63,6 +63,8 @@ void ofApp::draw(){
 //--------------------------------------------------------------
 void ofApp::audioOut(float * output, int bufferSize, int nChannels) {
    
+    /* currently set up with two different types of clock --> maxiClock and phasor
+     but currently just using maxiClock */
     
     for (int i = 0; i < bufferSize; i++){
         
