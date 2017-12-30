@@ -41,13 +41,13 @@ class ofApp : public ofBaseApp{
     // instead we'll create a counter with phasor
     
     // set up oscillators
-    maxiOsc VCO1, VCO2, myCounter, LFO1;
+    maxiOsc VCO1, VCO2, myCounter, LFO1, LFO2;
     
     // for use with myCounter
     int currentCount;
     
     // control sound output from oscillators
-    double VCO1out, LFO1out;
+    double VCO1out, VCO2out, LFO1out, LFO2out;
     
     // envs
     maxiEnv ADSR;

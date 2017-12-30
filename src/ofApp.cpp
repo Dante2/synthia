@@ -63,35 +63,37 @@ void ofApp::audioOut(float * output, int bufferSize, int nChannels) {
     for (int i = 0; i < bufferSize; i++){
         
         // LFO
-        LFO1out = LFO1.sinewave(5) * 10;
-        
-        // LFO controlled oscillator --> vibrato
-        double VCO2LFO1 = VCO2.sawn(200 + LFO1out);
-        
+        LFO1out = LFO1.sinewave(5) * 2;
+        LFO2out = LFO2.sinewave(0.1) * 1500;
+ 
         // clock device using phasor and square wave
         
         int myArray[10] = {100, 200, 300, 400, 500, 600, 500, 400, 300, 200};
         currentCount = myCounter.phasor(1, 1, 9);
         
-        // oscillator1
+        //--- oscillators ---//
+        
         // worth playing around with high pass / band pass / band reject
         VCO1out = VCO1.square(2000) * currentCount;
+        
+        // LFO controlled oscillator --> vibrato
+        VCO2out = VCO2.sawn(200 + LFO1out);
         
         // filters
         // low pass - portamento
         VCF1out = VCO1.square(VCF1.lopass(myArray[currentCount], 0.005));
         
-        // low res
-        VCF2out = VCF2.lores(VCO1out, 500, 20);
+        // low res - vibrato
+        VCF2out = VCF2.lores(VCO2out, 2000 + LFO2out, 20);
         
         // amplitude control on raw oscillator and filter
         double VCO1amp = VCO1out * 0.0;
         double VCF1amp = VCF1out * 0.0;
-        double VCF2amp = VCF2out * 0.0;
-        double VCO2LFO1amp = VCO2LFO1 * 0.05;
+        double VCF2amp = VCF2out * 0.05;
+        double VCO2amp = VCO2out * 0.0;
         
         // mixer
-        mix = VCO1amp + VCF1amp + VCF2amp + VCO2LFO1amp;
+        mix = VCO1amp + VCF1amp + VCF2amp + VCO2amp;
         
         output[i * nChannels] = mix;
         output[i * nChannels + 1] = mix;
