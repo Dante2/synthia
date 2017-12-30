@@ -30,24 +30,34 @@
  *
  */
 
-/*
- Feature request:
- maxiNANINFAlarm
- maxiLimiter
- */
-
 #ifndef MAXIMILIAN_H
 #define MAXIMILIAN_H
 
 //#define MAXIMILIAN_PORTAUDIO
 #define MAXIMILIAN_RT_AUDIO
 
-
 #include <iostream>
 #include <fstream>
 #include <string.h>
+#include <cassert>
 #include <cstdlib>
 #include "math.h"
+#include <cerrno>
+#include <queue>
+#include <vector>
+
+#if !defined(_WIN32) && (defined(unix) || defined(__unix__) || defined(__unix) || (defined(__APPLE__) && defined(__MACH__)))
+#define OS_IS_UNIX true
+#include <pthread.h>
+#include <unistd.h>
+#endif
+
+#ifdef _WIN32 //|| _WIN64
+#define OS_IS_WIN true
+#include <algorithm>
+#include <Windows.h>
+#include <process.h>
+#endif
 
 using namespace std;
 #ifndef PI
@@ -91,24 +101,38 @@ public:
 	double noise();
 	double sinebuf(double frequency);
 	double sinebuf4(double frequency);
+    double sawn(double frequency);
+    double rect(double frequency, double duty=0.5);
 	void phaseReset(double phaseIn);
-    double sawn(double frequency);    
 	
 };
 
 
 class maxiEnvelope {
 	
-	double period;
+	double period=0;
 	double output;
-	double startval;
+    double phase;
+	double startVal;
+    double endVal;
 	double currentval;
 	double nextval;
+    bool noteOn;
+    bool releaseMode;
+    bool decayMode;
+    bool sustainMode;
+    bool attackMode;
 	int isPlaying;
 
-public:	
+public:
+    int trig;
 	double line(int numberofsegments,double segments[100]);
+    double ramp(double startVal=0, double endVal=1, double duration=1);
+    double ramps(std::vector<double> rampsArray);
+    double ar(double attack=0.1, double release=0.1);
+    double adsr(double attack=0.1, double decay=0.1, double sustain=0.1, double release=0.1);
 	void trigger(int index,double amp);
+    void trigger(bool noteOn=false);
 	int valindex;
 	double amplitude;
 	
@@ -213,20 +237,20 @@ private:
 	short 	myFormat;
 	int   	myByteRate;
 	short 	myBlockAlign;
-	short 	myBitsPerSample;
+	double position, recordPosition;
 	double speed;
 	double output;
     maxiLagExp<double> loopRecordLag;
 	
 public:
-	double position, recordPosition;
 	int	myDataSize;
 	short 	myChannels;
 	int   	mySampleRate;
 	long length;
-	void getLength();
+	long getLength();
     void setLength(unsigned long numSamples);  
-	
+    short 	myBitsPerSample;
+
 	
 //	char* 	myData;
     short* temp;
@@ -237,9 +261,11 @@ public:
 	{
 //		if (myData) free(myData);
         if (temp) free(temp);
+        printf("freeing SampleData");
+
 	}
 	
-	maxiSample():temp(NULL),position(0), recordPosition(0), myChannels(1), mySampleRate(maxiSettings::sampleRate) {};
+    maxiSample():temp(NULL),position(0), recordPosition(0), myChannels(1), mySampleRate(maxiSettings::sampleRate) {};
     
     maxiSample& operator=(const maxiSample &source) {
         if (this == &source)
@@ -285,60 +311,60 @@ public:
     void clear();
     
     void reset();
-	
-	double play();
-
+    
+    double play();
+    
     double playLoop(double start, double end); // start and end are between 0.0 and 1.0
-	
-	double playOnce();
-	
-	double playOnce(double speed);
-
+    
+    double playOnce();
+    
+    double playOnce(double speed);
+    
     void setPosition(double newPos); // between 0.0 and 1.0
     
     double playUntil(double end);
-	
-	double play(double speed);
-	
-	double play(double frequency, double start, double end, double &pos);
-	
-	double play(double frequency, double start, double end);
-	
-	double play4(double frequency, double start, double end);
-	
-	double bufferPlay(unsigned char &bufferin,long length);
-	
-	double bufferPlay(unsigned char &bufferin,double speed,long length);
-	
-	double bufferPlay(unsigned char &bufferin,double frequency, double start, double end);
-	
-	double bufferPlay4(unsigned char &bufferin,double frequency, double start, double end);
+    
+    double play(double speed);
+    
+    double play(double frequency, double start, double end, double &pos);
+    
+    double play(double frequency, double start, double end);
+    
+    double play4(double frequency, double start, double end);
+    
+    double bufferPlay(unsigned char &bufferin,long length);
+    
+    double bufferPlay(unsigned char &bufferin,double speed,long length);
+    
+    double bufferPlay(unsigned char &bufferin,double frequency, double start, double end);
+    
+    double bufferPlay4(unsigned char &bufferin,double frequency, double start, double end);
     bool save() {
         return save(myPath);
     }
     
 	bool save(string filename)
 	{
-		fstream myFile (filename.c_str(), ios::out | ios::binary);
-		
-		// write the wav file per the wav file format
-		myFile.seekp (0, ios::beg); 
-		myFile.write ("RIFF", 4);
-		myFile.write ((char*) &myChunkSize, 4);
-		myFile.write ("WAVE", 4);
-		myFile.write ("fmt ", 4);
-		myFile.write ((char*) &mySubChunk1Size, 4);
-		myFile.write ((char*) &myFormat, 2);
-		myFile.write ((char*) &myChannels, 2);
-		myFile.write ((char*) &mySampleRate, 4);
-		myFile.write ((char*) &myByteRate, 4);
-		myFile.write ((char*) &myBlockAlign, 2);
-		myFile.write ((char*) &myBitsPerSample, 2);
-		myFile.write ("data", 4);
-		myFile.write ((char*) &myDataSize, 4);
-		myFile.write ((char*) temp, myDataSize);
-		
-		return true;
+        fstream myFile (filename.c_str(), ios::out | ios::binary);
+        
+        // write the wav file per the wav file format
+        myFile.seekp (0, ios::beg);
+        myFile.write ("RIFF", 4);
+        myFile.write ((char*) &myChunkSize, 4);
+        myFile.write ("WAVE", 4);
+        myFile.write ("fmt ", 4);
+        myFile.write ((char*) &mySubChunk1Size, 4);
+        myFile.write ((char*) &myFormat, 2);
+        myFile.write ((char*) &myChannels, 2);
+        myFile.write ((char*) &mySampleRate, 4);
+        myFile.write ((char*) &myByteRate, 4);
+        myFile.write ((char*) &myBlockAlign, 2);
+        myFile.write ((char*) &myBitsPerSample, 2);
+        myFile.write ("data", 4);
+        myFile.write ((char*) &myDataSize, 4);
+        myFile.write ((char*) temp, myDataSize);
+        
+        return true;
 	}
 	
 	// return a printable summary of the wav file
@@ -346,6 +372,7 @@ public:
 	{
 		char *summary = new char[250];
 		sprintf(summary, " Format: %d\n Channels: %d\n SampleRate: %d\n ByteRate: %d\n BlockAlign: %d\n BitsPerSample: %d\n DataSize: %d\n", myFormat, myChannels, mySampleRate, myByteRate, myBlockAlign, myBitsPerSample, myDataSize);
+		std::cout << myDataSize;
 		return summary;
 	}
     
@@ -356,43 +383,47 @@ public:
 
 class maxiMap {
 public:
-	static double inline linlin(double val, double inMin, double inMax, double outMin, double outMax) {
-		val = max(min(val, inMax), inMin);
-		return ((val - inMin) / (inMax - inMin) * (outMax - outMin)) + outMin;
-	}
-	
-	static double inline linexp(double val, double inMin, double inMax, double outMin, double outMax) {
-		//clipping
-		val = max(min(val, inMax), inMin);
-		return pow((outMax / outMin), (val - inMin) / (inMax - inMin)) * outMin;
-	}
-	
-	static double inline explin(double val, double inMin, double inMax, double outMin, double outMax) {
-		//clipping
-		val = max(min(val, inMax), inMin);
-		return (log(val/inMin) / log(inMax/inMin) * (outMax - outMin)) + outMin;
-	}
-	
+    static double inline linlin(double val, double inMin, double inMax, double outMin, double outMax) {
+        val = max(min(val, inMax), inMin);
+        return ((val - inMin) / (inMax - inMin) * (outMax - outMin)) + outMin;
+    }
+    
+    static double inline linexp(double val, double inMin, double inMax, double outMin, double outMax) {
+        //clipping
+        val = max(min(val, inMax), inMin);
+        return pow((outMax / outMin), (val - inMin) / (inMax - inMin)) * outMin;
+    }
+    
+    static double inline explin(double val, double inMin, double inMax, double outMin, double outMax) {
+        //clipping
+        val = max(min(val, inMax), inMin);
+        return (log(val/inMin) / log(inMax/inMin) * (outMax - outMin)) + outMin;
+    }
+    
     //changed to templated function, e.g. maxiMap::maxiClamp<int>(v, l, h);
     template<typename T>
-	static T inline clamp(T v, const T low, const T high) {
+    static T inline clamp(T v, const T low, const T high) {
         if (v > high)
             v = high;
         else if (v < low) {
             v = low;
         }
-		return v;
-	}
+        return v;
+    }
 	
 };
+
 
 class maxiDyn {
 	
 	
 public:
-	double gate(double input, double threshold=0.9, long holdtime=1, double attack=1, double release=0.9995);
-	double compressor(double input, double ratio, double threshold=0.9, double attack=1, double release=0.9995);
-	double input;
+//	double gate(double input, double threshold=0.9, long holdtime=1, double attack=1, double release=0.9995);
+//	double compressor(double input, double ratio, double threshold=0.9, double attack=1, double release=0.9995);
+    double gate(double input, double threshold=0.9, long holdtime=1, double attack=1, double release=0.9995);
+    double compressor(double input, double ratio, double threshold=0.9, double attack=1, double release=0.9995);
+    double compress(double input);
+    double input;
 	double ratio;
 	double currentRatio;
 	double threshold;
@@ -400,6 +431,10 @@ public:
 	double attack;
 	double release;
 	double amplitude;
+    void setAttack(double attackMS);
+    void setRelease(double releaseMS);
+    void setThreshold(double thresholdI);
+    void setRatio(double ratioF);
 	long holdtime;
 	long holdcount;
 	int attackphase,holdphase,releasephase;
@@ -411,6 +446,7 @@ class maxiEnv {
 public:
 	double ar(double input, double attack=1, double release=0.9, long holdtime=1, int trigger=0);
 	double adsr(double input, double attack=1, double decay=0.99, double sustain=0.125, double release=0.9, long holdtime=1, int trigger=0);
+    double adsr(double input,int trigger);
 	double input;
 	double output;
 	double attack;
@@ -418,15 +454,22 @@ public:
 	double sustain;
 	double release;
 	double amplitude;
+    void setAttack(double attackMS);
+    void setRelease(double releaseMS);
+    void setDecay(double decayMS);
+    void setSustain(double sustainL);
 	int trigger;
-	long holdtime;
+	long holdtime=1;
 	long holdcount;
 	int attackphase,decayphase,sustainphase,holdphase,releasephase;
 };
 
 class convert {
 public:
-	double mtof(int midinote);
+	static double mtof(int midinote);
+    static int ftom(double frequency);
+    static double atodb(double amplitude);
+    static double dbtoa(double amplitude);
 };
 
 
@@ -516,20 +559,20 @@ public:
         env = 0;
     }
     void setAttack(T attackMS) {
-        attack = pow( 0.01, 1.0 / (attackMS * maxiSettings::sampleRate * 0.001 ) );        
+        attack = pow( 0.01, 1.0 / (attackMS * maxiSettings::sampleRate * 0.001 ) );
     }
     void setRelease(T releaseMS) {
-        release = pow( 0.01, 1.0 / (releaseMS * maxiSettings::sampleRate * 0.001 ) );            
+        release = pow( 0.01, 1.0 / (releaseMS * maxiSettings::sampleRate * 0.001 ) );
     }
     inline T play(T input) {
         input = fabs(input);
         if (input>env)
             env = attack * (env - input) + input;
         else
-            env = release * (env - input) + input;        
+            env = release * (env - input) + input;
         return env;
     }
-	void reset() {env=0;}
+    void reset() {env=0;}
     inline T getEnv(){return env;}
     inline void setEnv(T val){env = val;}
 private:
@@ -539,7 +582,6 @@ private:
 typedef maxiEnvelopeFollowerType<double> maxiEnvelopeFollower;
 typedef maxiEnvelopeFollowerType<float> maxiEnvelopeFollowerF;
 
-//from https://ccrma.stanford.edu/~jos/filters/DC_Blocker_Software_Implementations.html
 class maxiDCBlocker {
 public:
     double xm1, ym1;
@@ -619,5 +661,213 @@ private:
     
 };
 
+class maxiKick {
+    
+public:
+    maxiKick();
+    double play();
+    void setPitch(double pitch);
+    void setRelease(double releaseD);
+    void trigger();
+    double pitch;
+    double output = 0 ;
+    double outputD =0 ;
+    double envOut;
+    bool useDistortion = false;
+    bool useLimiter = false;
+    bool useFilter = false;
+    double distortion = 0;
+    bool inverse = false;
+    double cutoff;
+    double resonance;
+    double gain = 1;
+    maxiOsc kick;
+    maxiEnv envelope;
+    maxiDistortion distort;
+    maxiFilter filter;
+};
+
+class maxiSnare {
+public:
+    maxiSnare();
+    double play();
+    void setPitch(double pitch);
+    void setRelease(double releaseD);
+    void trigger();
+    double pitch;
+    double output = 0 ;
+    double outputD = 0 ;
+    double envOut;
+    bool useDistortion = false;
+    bool useLimiter = false;
+    bool useFilter = true;
+    double distortion = 0;
+    bool inverse = false;
+    double cutoff;
+    double resonance;
+    double gain = 1;
+    maxiOsc tone;
+    maxiOsc noise;
+    maxiEnv envelope;
+    maxiDistortion distort;
+    maxiFilter filter;
+    
+    
+    
+};
+
+class maxiHats {
+    
+public:
+    maxiHats();
+    double play();
+    void setPitch(double pitch);
+    void setRelease(double releaseD);
+    void trigger();
+    double pitch;
+    double output = 0;
+    double outputD = 0;
+    double envOut;
+    bool useDistortion = false;
+    bool useLimiter = false;
+    bool useFilter = false;
+    double distortion = 0;
+    bool inverse = false;
+    double cutoff;
+    double resonance;
+    double gain = 1;
+    maxiOsc tone;
+    maxiOsc noise;
+    maxiEnv envelope;
+    maxiDistortion distort;
+    maxiSVF filter;
+    
+    
+};
+
+
+class maxiSynth {
+    
+    
+    
+};
+
+
+class granularSynth {
+    
+    
+    
+};
+
+
+class maxiSampler {
+    
+public:
+    maxiSampler();
+    double play();
+    void setPitch(double pitch, bool setall=false);
+    void midiNoteOn(double pitch, double velocity, bool setall=false);
+    void midiNoteOff(double pitch, double velocity, bool setall=false);
+    void setAttack(double attackD,bool setall=true);
+    void setDecay(double decayD,bool setall=true);
+    void setSustain(double sustainD,bool setall=true);
+    void setRelease(double releaseD,bool setall=true);
+    void setPosition(double positionD,bool setall=true);
+    void load(string inFile,bool setall=true);
+    void setNumVoices(int numVoices);
+    double position;
+    void trigger();
+    double pitch[32];
+    int originalPitch=67;
+    double outputs[32];
+    double outputD = 0;
+    double envOut[32];
+    double envOutGain[32];
+    double output;
+    bool useDistortion = false;
+    bool useLimiter = false;
+    bool useFilter = false;
+    double distortion = 0;
+    bool inverse = false;
+    double cutoff;
+    double resonance;
+    double gain = 1;
+    int voices;
+    int currentVoice=0;
+    convert mtof;
+    maxiOsc LFO1;
+    maxiOsc LFO2;
+    maxiOsc LFO3;
+    maxiOsc LFO4;
+    maxiSample samples[32];
+    maxiEnv envelopes[32];
+    maxiDistortion distort;
+    maxiSVF filters[32];
+    bool sustain = true;
+    
+    
+};
+
+class maxiClock {
+public:
+    maxiClock();
+    void ticker();
+    void setTempo(double bpm);
+    void setTicksPerBeat(int ticksPerBeat);
+    maxiOsc timer;
+    int currentCount;
+    int lastCount;
+    int playHead;
+    double bps;
+    double bpm;
+    int ticks;
+    bool tick;
+    
+};
+
+class maxiRecorder
+{
+public:
+    maxiRecorder();
+    ~maxiRecorder();
+
+    void                setup(std::string _filename);
+    void                startRecording();
+    void                stopRecording();
+    bool                isRecording() const;
+    void                passData(double* _in, int _inBufferSize);
+    void                passData(float*  _in, int _inBufferSize);
+    void                saveToWav();
+
+private:
+    template <typename T>
+    void                write(std::ofstream& _stream, const T& _t);
+    void*               update(void* _context);
+    std::vector<double> getProcessedData();
+    void                enqueueBuffer();
+    void                freeResources();
+    bool                threadRunning;
+    const int           bufferQueueSize;
+    const int           bufferSize;
+    long int            bufferIndex;
+    long int            recordedAmountFrames;
+    std::queue<double*> bufferQueue;
+    std::queue<double*> savedBuffers;
+    bool                doRecord;
+    std::string         filename;
+#if defined(OS_IS_UNIX)
+	pthread_t           daemon;
+	static void*        update_pthread_helper(void* _context)
+#elif defined(OS_IS_WIN)
+	HANDLE				daemonHandle;
+	static unsigned __stdcall
+                        update_pthread_helper(void* _context)
+#endif
+	{
+		maxiRecorder* _this = static_cast<maxiRecorder*>(_context);
+		_this->update(_this);
+		return 0;
+	}
+};
 
 #endif

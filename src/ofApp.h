@@ -36,9 +36,8 @@ class ofApp : public ofBaseApp{
     
 
     
-    // maxiClock object doesn't seem to exist in the OF version of Maxim :[
-    // maxiClock myClock;
-    // instead we'll create a counter with phasor
+    // maxiClock object wasn't working but I solved it
+    maxiClock myClock;
     
     // set up oscillators
     maxiOsc VCO1, VCO2, myCounter, LFO1, LFO2;
