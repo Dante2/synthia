@@ -1,4 +1,4 @@
-/* maxiClock with ADSR as resonant filter on VCO3 for drum like sounds */
+/* maxiClock with ADSR as resonant filter for drum like sounds */
 
 #include "ofApp.h"
 
