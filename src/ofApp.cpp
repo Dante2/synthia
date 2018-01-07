@@ -1,11 +1,3 @@
-/* This is an example of how to integrate maximilain into openFrameworks,
- including using audio received for input and audio requested for output.
- 
- 
- You can copy and paste this and use it as a starting example.
- 
- */
-
 #include "ofApp.h"
 
 
@@ -63,9 +55,6 @@ void ofApp::draw(){
 
 //--------------------------------------------------------------
 void ofApp::audioOut(float * output, int bufferSize, int nChannels) {
-   
-    /* currently set up with two different types of clock --> maxiClock and phasor
-     but currently just using maxiClock */
     
     for (int i = 0; i < bufferSize; i++){
         
@@ -75,8 +64,6 @@ void ofApp::audioOut(float * output, int bufferSize, int nChannels) {
         // maxiClock functionality
         myClock.ticker();
         if (myClock.tick) {
-            // freq += 2;
-            // std::cout << myClock.tick;
             
             // retrigger the voices once we reach the 6th and final voice
             if (voice == 6) {
@@ -85,30 +72,26 @@ void ofApp::audioOut(float * output, int bufferSize, int nChannels) {
             
         // trigger the envelope from the start
         ADSR[voice].trigger = 1;
-        // ADSR.trigger = 1;
         pitch[voice] = voice+1;
         voice ++;
             
         }
     
+        
+        
         /* our ADSR ENVs are iterated through and passed through to the ADSR output
          where the adsr functionality passes it a constant signal of 1 to generate the transient and triggered */
-        ADSRout[i] = ADSR[i].adsr(1., ADSR[i].trigger);
-        //std::cout << " adsr out = " << ADSRout;
+        
     
         // LFO
-        LFO1out = LFO1.sinewave(5) * 2;
-        LFO2out = LFO2.sinewave(0.1) * 1500;
+        // LFO1out[i] = LFO1[i].sinewave(5) * 2;
+        // LFO2out = LFO2.sinewave(0.1) * 1500;
  
-        // sequencing with phasor and an array of freq values
-        
-        int myArray[10] = {100, 200, 300, 400, 500, 600, 500, 400, 300, 200};
-        currentCount = myCounter.phasor(1, 1, 9);
-
-        // this if else statement couples with the phasor in currentCount to trigger the ADSR
-//        if (currentCount == 1) ADSR.trigger = 1;
+            
+//        // sequencing with phasor and an array of freq values
 //
-//        else ADSR.trigger = 0;
+//        int myArray[10] = {100, 200, 300, 400, 500, 600, 500, 400, 300, 200};
+//        currentCount = myCounter.phasor(1, 1, 9);
         
         //--- oscillators ---//
         
@@ -118,37 +101,48 @@ void ofApp::audioOut(float * output, int bufferSize, int nChannels) {
         // LFO controlled oscillator --> vibrato
         VCO2out = VCO2.sawn(200 + LFO1out);
         
-        // using env to control pitch of oscillator --> good for drums with currentCount phasor as clock
-        VCO3out[i] = VCO3[i].sawn(currentCount * 100 * ADSRout[i] * 10);
-        
         // filters
         // low pass - portamento
-        VCF1out = VCO1.square(VCF1.lopass(myArray[currentCount], 0.005));
+//        VCF1out = VCO1.square(VCF1.lopass(myArray[currentCount], 0.005));
         
         // low res - vibrato
-        VCF2out = VCF2.lores(VCO2out, 2000 + LFO2out, 20);
+//        VCF2out = VCF2.lores(VCO2out, 2000 + LFO2out, 20);
         
+        for (int i=0; i<6; i++) {
+            
+            ADSRout[i] = ADSR[i].adsr(1., ADSR[i].trigger);
+            LFO3out[i] = LFO3[i].sinebuf(0.2);
+            VCO3out[i] = VCO3[i].pulse((110 * pitch[i]) + LFO3out[i], 0.2);
+            VCF3out[i] = VCF3[i].lores((VCO3out[i]) * 0.5, 250 + ((pitch[i] + LFO3out[i]) * 1000), 10);
+            
+            // using env to control pitch of oscillator --> good for drums with currentCount phasor as clock
+            // VCO3out[i] = VCO3[i].sawn(250 * pitch[i] * ADSRout[i] * 10);
+            
         // apply envs
         // double VCF2env = VCF2out * ADSRout;
-        VCO3env[i] = VCO3out[i] * ADSRout[i] / 6;
+        mix = VCF3out[i] * ADSRout[i] / 6;
         
+        }
         
         // amplitude control on raw oscillator and filter
-        double VCO1amp = VCO1out * 0.0;
-        double VCF1amp = VCF1out * 0.0;
+//        double VCO1amp = VCO1out * 0.0;
+//        double VCF1amp = VCF1out * 0.0;
         // double VCF2amp = VCF2env * 0.0;
-        double VCO2amp = VCO2out * 0.0;
-        VCO3amp[i] = VCO3env[i] * 0.025;
+       // double VCO2amp = VCO2out * 0.0;
+        //VCO3amp[i] = VCO3env[i] * 0.025;
+        ampOut = mix * 0.025;
         
         // mixer
         // mix = VCO1amp + VCF1amp + VCF2amp + VCO2amp + VCO3amp;
         
-        mix += VCO3amp[i];
+        // mix += VCO3amp[i];
         
+        for (int i=0; i<6; i++) {
         // if you dont set env to 'off' its constantly 'on'
         ADSR[i].trigger = 0;
-        output[i * nChannels] = mix;
-        output[i * nChannels + 1] = mix;
+        }
+        output[i * nChannels] = ampOut;
+        output[i * nChannels + 1] = ampOut;
         
     }
     // std::cout << " adsr out = " << ADSRout;

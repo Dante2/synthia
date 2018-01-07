@@ -40,7 +40,7 @@ class ofApp : public ofBaseApp{
     maxiClock myClock;
     
     // set up oscillators. Hardcoding number at VCO3 --> bad?
-    maxiOsc VCO1, VCO2, VCO3[6], myCounter, LFO1, LFO2;
+    maxiOsc VCO1, VCO2, VCO3[6], myCounter, LFO1, LFO2, LFO3[6];
     
     // for use with myCounter
     int currentCount, voice;
@@ -49,7 +49,7 @@ class ofApp : public ofBaseApp{
     double pitch[6];
     
     // control sound output from oscillators. Hardcoding number at VCO3out --> bad?
-    double VCO1out, VCO2out, VCO3out[6], LFO1out, LFO2out;
+    double VCO1out, VCO2out, VCO3out[6], LFO1out, LFO2out, LFO3out[6];
     
     // envs
     maxiEnv ADSR[6];
@@ -58,10 +58,10 @@ class ofApp : public ofBaseApp{
     double ADSRout[6];
     
     // filter
-    maxiFilter VCF1, VCF2;
+    maxiFilter VCF1, VCF2, VCF3[6];
     
     // control out put from filter
-    double VCF1out, VCF2out;
+    double VCF1out, VCF2out, VCF3out[6];
     
     // oscillator 3 mixed with env
     double VCO3env[6];
