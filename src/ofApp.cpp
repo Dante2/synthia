@@ -1,3 +1,5 @@
+/* maxiClock with ADSR as resonant filter on VCO3 for drum like sounds */
+
 #include "ofApp.h"
 
 
@@ -25,11 +27,9 @@ void ofApp::setup(){
     ADSR.setSustain(0.25);
     ADSR.setRelease(1000);
     
-    mySample.load(ofToDataPath("sound.wav"));
-    
     ofBackground(0,0,0);
 
-    ofSoundStreamSetup(2,2,this, sampleRate, bufferSize, 4); /* this has to happen at the end of setup - it switches on the DAC */
+    ofSoundStreamSetup(2,2,this, sampleRate, bufferSize, 4);
 
 }
 
@@ -38,11 +38,10 @@ void ofApp::audioOut(float * output, int bufferSize, int nChannels) {
     
     for (int i = 0; i < bufferSize; i++){
         
-        // maxiClock functionality
-//        myClock.ticker();
-//        if (myClock.tick) {
-//                ADSR.trigger = 1;
-//        }
+        myClock.ticker();
+        if (myClock.tick) {
+                ADSR.trigger = 1;
+        }
     
      ADSRout = ADSR.adsr(1., ADSR.trigger);
     
@@ -80,7 +79,7 @@ void ofApp::audioOut(float * output, int bufferSize, int nChannels) {
         // amplitude control on raw oscillator and filter
         double VCO1amp = VCO1out * 0.0;
         double VCF1amp = VCF1out * 0.0;
-        double VCF2amp = VCF2env * 0.0;
+        double VCF2amp = VCF2env * 0.05;
         double VCO2amp = VCO2out * 0.0;
         double VCO3amp = VCO3env * 0.05;
         
