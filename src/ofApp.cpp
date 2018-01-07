@@ -1,11 +1,3 @@
-/* This is an example of how to integrate maximilain into openFrameworks,
- including using audio received for input and audio requested for output.
- 
- 
- You can copy and paste this and use it as a starting example.
- 
- */
-
 #include "ofApp.h"
 
 
@@ -26,10 +18,7 @@ void ofApp::setup(){
 
     // calling the calling the setup method in maximilian settings containing samplerate and buffer size
     ofxMaxiSettings::setup(sampleRate, 2, bufferSize);
-    
-    /* Anything that you would normally find/put in maximilian's setup() method needs to go here. For example, Sample loading.
-     */
-    
+
     // apply ADSR values accordingly
     ADSR.setAttack(20);
     ADSR.setDecay(100);
@@ -45,51 +34,17 @@ void ofApp::setup(){
 }
 
 //--------------------------------------------------------------
-void ofApp::update(){
-    
-    
-}
-
-//--------------------------------------------------------------
-void ofApp::draw(){
-    
-    /* You can use any of the data from audio received and audiorequested to draw stuff here.
-     
-     */
-    
-    
-}
-
-//--------------------------------------------------------------
 void ofApp::audioOut(float * output, int bufferSize, int nChannels) {
-   
-    /* currently set up with two different types of clock --> maxiClock and phasor
-     but currently just using maxiClock */
     
     for (int i = 0; i < bufferSize; i++){
         
         // maxiClock functionality
-        myClock.ticker();
-        if (myClock.tick) {
-            // freq += 2;
-            // std::cout << myClock.tick;
-            
-            // retrigger the voices once we reach the 6th and final voice
-            // if (voice == 6) {
-               // voice = 0;
-           // }
-            
-            // trigger the envelope from the start
-//            ADSR[voice].trigger = 1;
-                ADSR.trigger = 1;
-            //std::cout << "adsr = " << ADSR.trigger;
-//            pitch[voice] = voice+1;
-//            voice ++;
-            
-        }
+//        myClock.ticker();
+//        if (myClock.tick) {
+//                ADSR.trigger = 1;
+//        }
     
      ADSRout = ADSR.adsr(1., ADSR.trigger);
-        //std::cout << " adsr out = " << ADSRout;
     
         // LFO
         LFO1out = LFO1.sinewave(5) * 2;
@@ -99,11 +54,6 @@ void ofApp::audioOut(float * output, int bufferSize, int nChannels) {
         
         int myArray[10] = {100, 200, 300, 400, 500, 600, 500, 400, 300, 200};
         currentCount = myCounter.phasor(1, 1, 9);
-
-        // this if else statement couples with the phasor in currentCount to trigger the ADSR
-//        if (currentCount == 1) ADSR.trigger = 1;
-//
-//        else ADSR.trigger = 0;
         
         //--- oscillators ---//
         
@@ -127,7 +77,6 @@ void ofApp::audioOut(float * output, int bufferSize, int nChannels) {
         double VCF2env = VCF2out * ADSRout;
         double VCO3env = VCO3out * ADSRout;
         
-        
         // amplitude control on raw oscillator and filter
         double VCO1amp = VCO1out * 0.0;
         double VCF1amp = VCF1out * 0.0;
@@ -138,72 +87,9 @@ void ofApp::audioOut(float * output, int bufferSize, int nChannels) {
         // mixer
         mix = VCO1amp + VCF1amp + VCF2amp + VCO2amp + VCO3amp;
         
-        // if you dont set env to 'off' its constantly 'on'
         ADSR.trigger = 0;
         output[i * nChannels] = mix;
         output[i * nChannels + 1] = mix;
         
     }
-    // std::cout << " adsr out = " << ADSRout;
-    
-}
-
-//--------------------------------------------------------------
-void ofApp::audioIn(float * input, int bufferSize, int nChannels){
-    
-    for(int i = 0; i < bufferSize; i++){
-        /* you can also grab the data out of the arrays*/
-        
-    }
-    
-}
-
-
-//--------------------------------------------------------------
-void ofApp::keyPressed(int key){
-    
-    
-}
-
-//--------------------------------------------------------------
-void ofApp::keyReleased(int key){
-    
-}
-
-//--------------------------------------------------------------
-void ofApp::mouseMoved(int x, int y){
-    
-    
-}
-
-//--------------------------------------------------------------
-void ofApp::mouseDragged(int x, int y, int button){
-    
-}
-
-//--------------------------------------------------------------
-void ofApp::mousePressed(int x, int y, int button){
-    
-    
-}
-
-//--------------------------------------------------------------
-void ofApp::mouseReleased(int x, int y, int button){
-    
-    
-}
-
-//--------------------------------------------------------------
-void ofApp::windowResized(int w, int h){
-    
-}
-
-//--------------------------------------------------------------
-void ofApp::gotMessage(ofMessage msg){
-    
-}
-
-//--------------------------------------------------------------
-void ofApp::dragEvent(ofDragInfo dragInfo){
-    
 }
