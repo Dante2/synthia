@@ -23,7 +23,6 @@ void ofApp::setup(){
     ADSR[i].setRelease(3000);
  }
     
-    mySample.load(ofToDataPath("sound.wav"));
     ofBackground(0,0,0);
     ofSoundStreamSetup(2,2,this, sampleRate, bufferSize, 4);
     ampOut = 0.025;
@@ -46,11 +45,6 @@ void ofApp::audioOut(float * output, int bufferSize, int nChannels) {
         pitch[voice] = voice + 1;
         voice ++;
         }
-            
-//        // sequencing with phasor and an array of freq values
-//
-//        int myArray[10] = {100, 200, 300, 400, 500, 600, 500, 400, 300, 200};
-//        currentCount = myCounter.phasor(1, 1, 9);
         
         //--- oscillators ---//
         
